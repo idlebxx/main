@@ -14,7 +14,6 @@ ADMIN_ID = 6599083480
 SUPPORT_USERNAME = "asoom993"
 UPDATES_CHANNEL = "talemathackr3"
 DEV_CHANNEL = "asoom_993"
-BOT_USERNAME = ""
 START_IMAGE_URL = "https://i.postimg.cc/Mpc5Ssmt/IMG-20260430-084401-176.jpg"
 
 bot = telebot.TeleBot(TOKEN, parse_mode="HTML")
@@ -32,16 +31,13 @@ def init_db():
     conn = get_db()
     cursor = conn.cursor()
     
-    # جدول الإعدادات
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS settings (
         user_id INTEGER PRIMARY KEY,
-        vote_channel TEXT,
-        auto_approve INTEGER DEFAULT 1
+        vote_channel TEXT
     )
     """)
     
-    # جدول المسابقات
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS contests (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -56,7 +52,6 @@ def init_db():
     )
     """)
     
-    # جدول المشاركين
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS contestants (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -64,12 +59,10 @@ def init_db():
         user_id INTEGER,
         name TEXT,
         votes INTEGER DEFAULT 0,
-        post_id INTEGER,
-        FOREIGN KEY (contest_id) REFERENCES contests (id)
+        post_id INTEGER
     )
     """)
     
-    # جدول التصويتات
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS votes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -80,7 +73,6 @@ def init_db():
     )
     """)
     
-    # جدول المحظورين
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS bans (
         user_id INTEGER PRIMARY KEY,
@@ -88,14 +80,12 @@ def init_db():
     )
     """)
     
-    # جدول الأدمن
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS admins (
         user_id INTEGER PRIMARY KEY
     )
     """)
     
-    # جدول المستخدمين
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY,
@@ -104,7 +94,6 @@ def init_db():
     )
     """)
     
-    # جدول قنوات الاشتراك الإجباري
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS force_subs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -156,7 +145,7 @@ def force_sub_required(func):
             keyboard = types.InlineKeyboardMarkup(row_width=1)
             for ch in channels:
                 keyboard.add(types.InlineKeyboardButton(f"📢 اشترك في القناة", url=f"https://t.me/{ch[1]}"))
-            keyboard.add(types.InlineKeyboardButton("🔄 تحقق", callback_data="check_sub", style='primary'))
+            keyboard.add(types.InlineKeyboardButton("🔄 تحقق", callback_data="check_sub"))
             
             msg = "❌ يجب الاشتراك في القنوات التالية أولاً:\n\n"
             for ch in channels:
@@ -179,24 +168,24 @@ def main_keyboard(user_id):
     keyboard = types.InlineKeyboardMarkup(row_width=2)
     
     keyboard.add(
-        types.InlineKeyboardButton("🎯 إنشاء مسابقة", callback_data="create_contest", style='primary'),
-        types.InlineKeyboardButton("📢 قناة التصويت", callback_data="set_channel", style='primary')
+        types.InlineKeyboardButton("🎯 إنشاء مسابقة", callback_data="create_contest"),
+        types.InlineKeyboardButton("📢 قناة التصويت", callback_data="set_channel")
     )
     keyboard.add(
-        types.InlineKeyboardButton("🏆 مسابقاتي", callback_data="my_contests", style='success'),
-        types.InlineKeyboardButton("⚙️ الإعدادات", callback_data="settings", style='success')
+        types.InlineKeyboardButton("🏆 مسابقاتي", callback_data="my_contests"),
+        types.InlineKeyboardButton("⚙️ الإعدادات", callback_data="settings")
     )
     keyboard.add(
-        types.InlineKeyboardButton("➕ إضافة أصوات", callback_data="add_votes", style='primary'),
-        types.InlineKeyboardButton("➖ خصم أصوات", callback_data="remove_votes", style='success')
+        types.InlineKeyboardButton("➕ إضافة أصوات", callback_data="add_votes"),
+        types.InlineKeyboardButton("➖ خصم أصوات", callback_data="remove_votes")
     )
     keyboard.add(
-        types.InlineKeyboardButton("📊 جدول المتصدرين", callback_data="leaderboard", style='primary'),
-        types.InlineKeyboardButton("📖 المساعدة", callback_data="help", style='success')
+        types.InlineKeyboardButton("📊 جدول المتصدرين", callback_data="leaderboard"),
+        types.InlineKeyboardButton("📖 المساعدة", callback_data="help")
     )
     keyboard.add(
-        types.InlineKeyboardButton("⭐ المميزات", callback_data="features", style='success'),
-        types.InlineKeyboardButton("📣 قنوات التواصل", callback_data="channels", style='success')
+        types.InlineKeyboardButton("⭐ المميزات", callback_data="features"),
+        types.InlineKeyboardButton("📣 قنوات التواصل", callback_data="channels")
     )
     
     conn = get_db()
@@ -204,7 +193,7 @@ def main_keyboard(user_id):
     conn.close()
     
     if is_admin or str(user_id) == str(ADMIN_ID):
-        keyboard.add(types.InlineKeyboardButton("👑 لوحة التحكم", callback_data="admin_panel", style='danger'))
+        keyboard.add(types.InlineKeyboardButton("👑 لوحة التحكم", callback_data="admin_panel"))
     
     return keyboard
 
@@ -240,7 +229,6 @@ def start_cmd(message):
     conn.execute("INSERT OR IGNORE INTO users (id, username, join_date) VALUES (?, ?, ?)", (user_id, username, join_date))
     conn.commit()
     
-    # التحقق من حظر
     banned = conn.execute("SELECT user_id FROM bans WHERE user_id = ?", (user_id,)).fetchone()
     conn.close()
     
@@ -248,7 +236,6 @@ def start_cmd(message):
         bot.send_message(message.chat.id, "🚫 حسابك محظور من استخدام البوت!")
         return
     
-    # التحقق من رابط مسابقة
     if len(message.text.split()) > 1:
         param = message.text.split()[1]
         if param.startswith("contest_"):
@@ -264,14 +251,13 @@ def start_cmd(message):
                     message.chat.id,
                     "🎯 <b>المشاركة في المسابقة</b>\n\nأرسل اسمك الآن للمشاركة:",
                     reply_markup=types.InlineKeyboardMarkup().add(
-                        types.InlineKeyboardButton("❌ إلغاء", callback_data="cancel", style='danger')
+                        types.InlineKeyboardButton("❌ إلغاء", callback_data="cancel")
                     )
                 )
                 return
     
     send_main_menu(message.chat.id, user_id)
 
-# ================= زر الإلغاء =================
 @bot.callback_query_handler(func=lambda call: call.data == "cancel")
 def cancel_callback(call):
     user_id = call.from_user.id
@@ -284,7 +270,6 @@ def cancel_callback(call):
         pass
     send_main_menu(call.message.chat.id, user_id)
 
-# ================= زر القائمة الرئيسية =================
 @bot.callback_query_handler(func=lambda call: call.data == "main_menu")
 def main_menu_callback(call):
     try:
@@ -293,7 +278,6 @@ def main_menu_callback(call):
         pass
     send_main_menu(call.message.chat.id, call.from_user.id)
 
-# ================= قنوات التواصل =================
 @bot.callback_query_handler(func=lambda call: call.data == "channels")
 def channels_callback(call):
     text = f"""📣 <b>قنوات التواصل</b>
@@ -305,14 +289,13 @@ def channels_callback(call):
 تابعنا ليصلك كل جديد!"""
     
     keyboard = types.InlineKeyboardMarkup()
-    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="main_menu", style='danger'))
+    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="main_menu"))
     
     try:
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
     except:
         bot.send_message(call.message.chat.id, text, reply_markup=keyboard)
 
-# ================= التحقق من الاشتراك =================
 @bot.callback_query_handler(func=lambda call: call.data == "check_sub")
 def check_sub_callback(call):
     subscribed, channels = check_force_sub(call.from_user.id)
@@ -326,7 +309,6 @@ def check_sub_callback(call):
     else:
         bot.answer_callback_query(call.id, "❌ لم تشترك في جميع القنوات بعد!", show_alert=True)
 
-# ================= عداد تنازلي =================
 def get_time_remaining(created_at):
     try:
         created = datetime.strptime(created_at, "%Y-%m-%d %H:%M:%S")
@@ -344,9 +326,7 @@ def get_time_remaining(created_at):
     except:
         return "⏳ حساب الوقت..."
 
-# ============================== دوال المسابقات ==============================
-
-# إنشاء مسابقة
+# ================= إنشاء مسابقة =================
 @bot.callback_query_handler(func=lambda call: call.data == "create_contest")
 @force_sub_required
 def create_contest_callback(call):
@@ -416,8 +396,7 @@ def get_contest_desc(message):
 👇 اضغط للمشاركة:"""
         
         keyboard = types.InlineKeyboardMarkup()
-        keyboard.add(types.InlineKeyboardButton("🎯 المشاركة في المسابقة", url=contest_link, style='success'))
-        keyboard.add(types.InlineKeyboardButton("📤 مشاركة", url=contest_link, style='primary'))
+        keyboard.add(types.InlineKeyboardButton("🎯 المشاركة في المسابقة", url=contest_link))
         
         sent = bot.send_message(int(channel_id), post_text, reply_markup=keyboard)
         
@@ -437,7 +416,7 @@ def get_contest_desc(message):
     except Exception as e:
         bot.send_message(message.chat.id, f"❌ خطأ: {str(e)}")
 
-# تعيين قناة التصويت
+# ================= تعيين قناة التصويت =================
 @bot.callback_query_handler(func=lambda call: call.data == "set_channel")
 @force_sub_required
 def set_channel_callback(call):
@@ -460,10 +439,9 @@ def save_channel(message):
             bot.send_message(message.chat.id, "❌ هذا ليس قناة!")
             return
         
-        # التحقق من صلاحيات البوت
         bot_member = bot.get_chat_member(chat.id, bot.get_me().id)
         if bot_member.status != "administrator":
-            bot.send_message(message.chat.id, "❌ البوت ليس مشرفاً في هذه القناة!\nيرجى رفع البوت مشرف أولاً.")
+            bot.send_message(message.chat.id, "❌ البوت ليس مشرفاً في هذه القناة!")
             return
         
         conn = get_db()
@@ -473,15 +451,14 @@ def save_channel(message):
         
         bot.send_message(
             message.chat.id,
-            f"✅ تم تعيين القناة بنجاح!\n\n📢 <b>{chat.title}</b>",
-            parse_mode="HTML"
+            f"✅ تم تعيين القناة بنجاح!\n\n📢 <b>{chat.title}</b>"
         )
         send_main_menu(message.chat.id, user_id)
         
     except Exception as e:
-        bot.send_message(message.chat.id, f"❌ خطأ: {str(e)}\nتأكد من صحة الرابط وأن البوت مضاف للقناة.")
+        bot.send_message(message.chat.id, f"❌ خطأ: {str(e)}")
 
-# مسابقاتي مع صفحات متعددة
+# ================= مسابقاتي مع صفحات متعددة =================
 @bot.callback_query_handler(func=lambda call: call.data == "my_contests")
 @force_sub_required
 def my_contests_callback(call):
@@ -507,8 +484,8 @@ def my_contests_callback(call):
             call.message.chat.id,
             call.message.message_id,
             reply_markup=types.InlineKeyboardMarkup().add(
-                types.InlineKeyboardButton("🎯 إنشاء مسابقة", callback_data="create_contest", style='primary'),
-                types.InlineKeyboardButton("↩️ رجوع", callback_data="main_menu", style='danger')
+                types.InlineKeyboardButton("🎯 إنشاء مسابقة", callback_data="create_contest"),
+                types.InlineKeyboardButton("↩️ رجوع", callback_data="main_menu")
             )
         )
         return
@@ -524,18 +501,17 @@ def my_contests_callback(call):
     
     keyboard = types.InlineKeyboardMarkup()
     
-    # أزرار التنقل بين الصفحات
     nav_buttons = []
     if page > 1:
-        nav_buttons.append(types.InlineKeyboardButton("⬅️ السابق", callback_data=f"contests_page_{page-1}", style='success'))
+        nav_buttons.append(types.InlineKeyboardButton("⬅️ السابق", callback_data=f"contests_page_{page-1}"))
     if page < total_pages:
-        nav_buttons.append(types.InlineKeyboardButton("التالي ➡️", callback_data=f"contests_page_{page+1}", style='success'))
+        nav_buttons.append(types.InlineKeyboardButton("التالي ➡️", callback_data=f"contests_page_{page+1}"))
     
     if nav_buttons:
         keyboard.row(*nav_buttons)
     
-    keyboard.add(types.InlineKeyboardButton("➕ مسابقة جديدة", callback_data="create_contest", style='success'))
-    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="main_menu", style='danger'))
+    keyboard.add(types.InlineKeyboardButton("➕ مسابقة جديدة", callback_data="create_contest"))
+    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="main_menu"))
     
     try:
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
@@ -550,7 +526,7 @@ def contests_page_callback(call):
     user_states[call.from_user.id]["contests_page"] = page
     my_contests_callback(call)
 
-# جدول المتصدرين
+# ================= جدول المتصدرين =================
 @bot.callback_query_handler(func=lambda call: call.data == "leaderboard")
 @force_sub_required
 def leaderboard_callback(call):
@@ -570,7 +546,7 @@ def leaderboard_callback(call):
     for contest in contests:
         keyboard.add(types.InlineKeyboardButton(f"🎯 {contest['title']}", callback_data=f"show_leaderboard_{contest['id']}"))
     
-    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="main_menu", style='danger'))
+    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="main_menu"))
     
     try:
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
@@ -606,8 +582,8 @@ def show_leaderboard(call):
     
     keyboard = types.InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        types.InlineKeyboardButton("🔄 تحديث", callback_data=f"refresh_leaderboard_{contest_id}", style='success'),
-        types.InlineKeyboardButton("↩️ رجوع", callback_data="leaderboard", style='danger')
+        types.InlineKeyboardButton("🔄 تحديث", callback_data=f"refresh_leaderboard_{contest_id}"),
+        types.InlineKeyboardButton("↩️ رجوع", callback_data="leaderboard")
     )
     
     try:
@@ -644,8 +620,8 @@ def refresh_leaderboard(call):
     
     keyboard = types.InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        types.InlineKeyboardButton("🔄 تحديث", callback_data=f"refresh_leaderboard_{contest_id}", style='success'),
-        types.InlineKeyboardButton("↩️ رجوع", callback_data="leaderboard", style='danger')
+        types.InlineKeyboardButton("🔄 تحديث", callback_data=f"refresh_leaderboard_{contest_id}"),
+        types.InlineKeyboardButton("↩️ رجوع", callback_data="leaderboard")
     )
     
     bot.answer_callback_query(call.id, "✅ تم تحديث جدول المتصدرين")
@@ -654,9 +630,7 @@ def refresh_leaderboard(call):
     except:
         bot.send_message(call.message.chat.id, text, reply_markup=keyboard)
 
-# ============================== المشاركة والتصويت ==============================
-
-# المشاركة في المسابقة
+# ================= المشاركة في المسابقة =================
 @bot.message_handler(func=lambda m: m.from_user.id in user_states and user_states[m.from_user.id].get("action") == "join_contest")
 @force_sub_required
 def handle_join_contest(message):
@@ -665,7 +639,6 @@ def handle_join_contest(message):
     contest_id = state["contest_id"]
     name = message.text.strip()
     
-    # التحقق من الاسم
     if len(name) < 2 or len(name) > 50:
         bot.send_message(message.chat.id, "❌ الاسم يجب أن يكون بين 2 و 50 حرفاً")
         return
@@ -676,7 +649,6 @@ def handle_join_contest(message):
     
     conn = get_db()
     
-    # التحقق من وجود المسابقة
     contest = conn.execute("SELECT * FROM contests WHERE id = ? AND active = 1", (contest_id,)).fetchone()
     
     if not contest:
@@ -685,7 +657,6 @@ def handle_join_contest(message):
         del user_states[user_id]
         return
     
-    # التحقق من المشاركة السابقة
     existing = conn.execute("SELECT id FROM contestants WHERE contest_id = ? AND user_id = ?", (contest_id, user_id)).fetchone()
     if existing:
         conn.close()
@@ -693,7 +664,6 @@ def handle_join_contest(message):
         del user_states[user_id]
         return
     
-    # إضافة المتسابق
     cursor = conn.execute("""
         INSERT INTO contestants (contest_id, user_id, name)
         VALUES (?, ?, ?)
@@ -703,7 +673,6 @@ def handle_join_contest(message):
     conn.commit()
     conn.close()
     
-    # إنشاء منشور المشارك في القناة
     try:
         bot_username = bot.get_me().username
         contest_link = f"https://t.me/{bot_username}?start=contest_{contest_id}"
@@ -719,7 +688,7 @@ def handle_join_contest(message):
         keyboard = types.InlineKeyboardMarkup(row_width=1)
         keyboard.add(
             types.InlineKeyboardButton(f"👍 تصويت (0)", callback_data=f"vote_{contest_id}_{contestant_id}"),
-            types.InlineKeyboardButton("🎯 المشاركة", url=contest_link, style='success')
+            types.InlineKeyboardButton("🎯 المشاركة", url=contest_link)
         )
         
         sent = bot.send_message(int(contest['channel_id']), post_text, reply_markup=keyboard)
@@ -729,23 +698,20 @@ def handle_join_contest(message):
         conn.commit()
         conn.close()
         
-        private_link = f"https://t.me/{bot_username}?start=contest_{contest_id}"
-        
         bot.send_message(
             message.chat.id,
             f"✅ تمت المشاركة بنجاح!\n\n"
             f"👤 <b>اسمك:</b> {name}\n"
             f"📢 <b>تم نشر اسمك في القناة</b>\n\n"
-            f"👍 شارك الرابط مع أصدقائك ليصوتوا لك!\n\n"
-            f"🔗 {private_link}"
+            f"👍 شارك الرابط مع أصدقائك ليصوتوا لك!"
         )
     except Exception as e:
-        bot.send_message(message.chat.id, f"❌ حدث خطأ في النشر: {str(e)}")
+        bot.send_message(message.chat.id, f"❌ حدث خطأ: {str(e)}")
     
     del user_states[user_id]
     send_main_menu(message.chat.id, user_id)
 
-# التصويت
+# ================= التصويت =================
 @bot.callback_query_handler(func=lambda call: call.data.startswith("vote_"))
 @force_sub_required
 def vote_callback(call):
@@ -756,33 +722,28 @@ def vote_callback(call):
     
     conn = get_db()
     
-    # التحقق من وجود المشارك
-    contestant = conn.execute("SELECT user_id, name, contest_id FROM contestants WHERE id = ?", (contestant_id,)).fetchone()
+    contestant = conn.execute("SELECT user_id FROM contestants WHERE id = ?", (contestant_id,)).fetchone()
     
     if not contestant:
         conn.close()
         bot.answer_callback_query(call.id, "❌ المشارك غير موجود", show_alert=True)
         return
     
-    # منع التصويت للنفس
     if contestant["user_id"] == user_id:
         conn.close()
         bot.answer_callback_query(call.id, "🚫 لا يمكنك التصويت لنفسك!", show_alert=True)
         return
     
-    # التحقق من عدم التصويت المزدوج
     existing = conn.execute("SELECT id FROM votes WHERE contest_id = ? AND voter_id = ?", (contest_id, user_id)).fetchone()
     if existing:
         conn.close()
         bot.answer_callback_query(call.id, "❌ لقد قمت بالتصويت في هذه المسابقة من قبل!", show_alert=True)
         return
     
-    # تسجيل التصويت
     conn.execute("INSERT INTO votes (contest_id, voter_id, contestant_id) VALUES (?, ?, ?)", (contest_id, user_id, contestant_id))
     conn.execute("UPDATE contestants SET votes = votes + 1 WHERE id = ?", (contestant_id,))
     conn.commit()
     
-    # الحصول على المعلومات لتحديث الزر
     info = conn.execute("""
         SELECT c.votes, c.post_id, co.channel_id 
         FROM contestants c 
@@ -793,21 +754,18 @@ def vote_callback(call):
     
     bot.answer_callback_query(call.id, "✅ تم التصويت بنجاح!", show_alert=True)
     
-    # تحديث زر التصويت بالعدد الجديد
     if info and info["post_id"]:
         try:
             keyboard = types.InlineKeyboardMarkup(row_width=1)
             keyboard.add(
                 types.InlineKeyboardButton(f"👍 تصويت ({info['votes']})", callback_data=f"vote_{contest_id}_{contestant_id}"),
-                types.InlineKeyboardButton("🎯 المشاركة", url=f"https://t.me/{bot.get_me(, style='success').username}?start=contest_{contest_id}")
+                types.InlineKeyboardButton("🎯 المشاركة", url=f"https://t.me/{bot.get_me().username}?start=contest_{contest_id}")
             )
             bot.edit_message_reply_markup(int(info["channel_id"]), info["post_id"], reply_markup=keyboard)
         except:
             pass
 
-# ============================== إدارة الأصوات ==============================
-
-# إضافة/خصم أصوات
+# ================= إضافة وخصم الأصوات =================
 @bot.callback_query_handler(func=lambda call: call.data in ["add_votes", "remove_votes"])
 @force_sub_required
 def votes_action_callback(call):
@@ -863,7 +821,7 @@ def process_votes_amount(message):
     try:
         amount = int(message.text.strip())
         if amount <= 0:
-            bot.send_message(message.chat.id, "❌ عدد غير صحيح (يجب أن يكون أكبر من 0)")
+            bot.send_message(message.chat.id, "❌ عدد غير صحيح")
             return
         
         state = user_states[user_id]
@@ -881,7 +839,6 @@ def process_votes_amount(message):
         
         conn.commit()
         
-        # تحديث المنشور
         info = conn.execute("""
             SELECT c.votes, c.post_id, co.channel_id, co.id as contest_id
             FROM contestants c 
@@ -894,7 +851,7 @@ def process_votes_amount(message):
                 keyboard = types.InlineKeyboardMarkup(row_width=1)
                 keyboard.add(
                     types.InlineKeyboardButton(f"👍 تصويت ({info['votes']})", callback_data=f"vote_{info['contest_id']}_{contestant_id}"),
-                    types.InlineKeyboardButton("🎯 المشاركة", url=f"https://t.me/{bot.get_me(, style='success').username}?start=contest_{info['contest_id']}")
+                    types.InlineKeyboardButton("🎯 المشاركة", url=f"https://t.me/{bot.get_me().username}?start=contest_{info['contest_id']}")
                 )
                 bot.edit_message_reply_markup(int(info["channel_id"]), info["post_id"], reply_markup=keyboard)
             except:
@@ -909,8 +866,7 @@ def process_votes_amount(message):
     del user_states[user_id]
     send_main_menu(message.chat.id, user_id)
 
-# ============================== الإعدادات ==============================
-
+# ================= الإعدادات =================
 @bot.callback_query_handler(func=lambda call: call.data == "settings")
 @force_sub_required
 def settings_callback(call):
@@ -925,14 +881,14 @@ def settings_callback(call):
     
     keyboard = types.InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        types.InlineKeyboardButton("📢 تغيير القناة", callback_data="set_channel", style='primary'),
-        types.InlineKeyboardButton("⛔ حظر عضو", callback_data="ban_user", style='danger')
+        types.InlineKeyboardButton("📢 تغيير القناة", callback_data="set_channel"),
+        types.InlineKeyboardButton("⛔ حظر عضو", callback_data="ban_user")
     )
     keyboard.add(
-        types.InlineKeyboardButton("✅ فك حظر", callback_data="unban_user", style='success'),
-        types.InlineKeyboardButton("📋 المحظورين", callback_data="banned_list", style='danger')
+        types.InlineKeyboardButton("✅ فك حظر", callback_data="unban_user"),
+        types.InlineKeyboardButton("📋 المحظورين", callback_data="banned_list")
     )
-    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="main_menu", style='danger'))
+    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="main_menu"))
     
     try:
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
@@ -952,7 +908,7 @@ def process_ban(message):
         conn.execute("INSERT OR IGNORE INTO bans (user_id, reason) VALUES (?, ?)", (user_id, "تم حظره بواسطة المشرف"))
         conn.commit()
         conn.close()
-        bot.send_message(message.chat.id, f"✅ تم حظر العضو `{user_id}`", parse_mode="Markdown")
+        bot.send_message(message.chat.id, f"✅ تم حظر العضو {user_id}")
         send_main_menu(message.chat.id, message.from_user.id)
     except:
         bot.send_message(message.chat.id, "❌ ID غير صحيح")
@@ -970,7 +926,7 @@ def process_unban(message):
         conn.execute("DELETE FROM bans WHERE user_id = ?", (user_id,))
         conn.commit()
         conn.close()
-        bot.send_message(message.chat.id, f"✅ تم فك الحظر عن العضو `{user_id}`", parse_mode="Markdown")
+        bot.send_message(message.chat.id, f"✅ تم فك الحظر عن العضو {user_id}")
         send_main_menu(message.chat.id, message.from_user.id)
     except:
         bot.send_message(message.chat.id, "❌ ID غير صحيح")
@@ -987,18 +943,17 @@ def banned_list_callback(call):
     else:
         text = "📋 <b>قائمة المحظورين</b>\n\n"
         for b in banned:
-            text += f"🆔 `{b['user_id']}`\n⚖️ {b['reason']}\n\n"
+            text += f"🆔 {b['user_id']}\n⚖️ {b['reason']}\n\n"
     
     keyboard = types.InlineKeyboardMarkup()
-    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="settings", style='danger'))
+    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="settings"))
     
     try:
-        bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard, parse_mode="Markdown")
+        bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
     except:
-        bot.send_message(call.message.chat.id, text, reply_markup=keyboard, parse_mode="Markdown")
+        bot.send_message(call.message.chat.id, text, reply_markup=keyboard)
 
-# ============================== المساعدة والمميزات ==============================
-
+# ================= المساعدة والمميزات =================
 @bot.callback_query_handler(func=lambda call: call.data == "help")
 @force_sub_required
 def help_callback(call):
@@ -1015,20 +970,17 @@ def help_callback(call):
 3️⃣ سيتم نشر اسمك في القناة
 
 👍 <b>للتصويت:</b>
-1️⃣ اشترك في قناة المسابقة
-2️⃣ اضغط على زر 'تصويت' تحت اسم المشارك
+اضغط على زر 'تصويت' تحت اسم المشارك
 
 ➕ <b>إضافة أصوات:</b>
-1️⃣ اضغط على '➕ إضافة أصوات'
-2️⃣ أرسل رابط منشور المشارك
-3️⃣ أرسل عدد الأصوات
+أرسل رابط منشور المشارك ثم عدد الأصوات
 
 ⏰ <b>ملاحظة:</b> يتم حذف المسابقات تلقائياً بعد 24 ساعة
 
 👨‍💻 <b>مطور البوت:</b> عصوم الشامي"""
     
     keyboard = types.InlineKeyboardMarkup()
-    keyboard.add(types.InlineKeyboardButton("🔙 رجوع", callback_data="main_menu", style='danger'))
+    keyboard.add(types.InlineKeyboardButton("🔙 رجوع", callback_data="main_menu"))
     
     try:
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
@@ -1055,19 +1007,18 @@ def features_callback(call):
 🔥 <b>تم التطوير بواسطة:</b> عصوم الشامي"""
     
     keyboard = types.InlineKeyboardMarkup()
-    keyboard.add(types.InlineKeyboardButton("🔙 رجوع", callback_data="main_menu", style='danger'))
+    keyboard.add(types.InlineKeyboardButton("🔙 رجوع", callback_data="main_menu"))
     
     try:
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
     except:
         bot.send_message(call.message.chat.id, text, reply_markup=keyboard)
 
-# ============================== حذف المسابقات التلقائي ==============================
-
+# ================= حذف المسابقات التلقائي =================
 def auto_delete_contests():
     while True:
         try:
-            time.sleep(3600)  # كل ساعة
+            time.sleep(3600)
             
             conn = get_db()
             one_day_ago = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
@@ -1079,24 +1030,18 @@ def auto_delete_contests():
             """, (one_day_ago,)).fetchall()
             
             for contest in old_contests:
-                # حذف منشور المسابقة
                 try:
                     bot.delete_message(int(contest["channel_id"]), contest["post_id"])
                 except:
                     pass
                 
-                # تحديث حالة المسابقة
                 conn.execute("UPDATE contests SET active = 0 WHERE id = ?", (contest["id"],))
                 conn.commit()
                 
-                # إشعار المالك
                 try:
                     bot.send_message(
                         contest["owner_id"],
-                        f"🗑️ <b>تم حذف المسابقة</b>\n\n"
-                        f"📌 {contest['title']}\n"
-                        f"🆔 #{contest['id']}\n"
-                        f"⏰ تم الحذف بعد 24 ساعة من إنشائها"
+                        f"🗑️ <b>تم حذف المسابقة</b>\n\n📌 {contest['title']}\n⏰ بعد 24 ساعة"
                     )
                 except:
                     pass
@@ -1104,13 +1049,12 @@ def auto_delete_contests():
             conn.close()
             
         except Exception as e:
-            print(f"خطأ في الحذف التلقائي: {e}")
+            print(f"خطأ: {e}")
 
 delete_thread = threading.Thread(target=auto_delete_contests, daemon=True)
 delete_thread.start()
 
-# ============================== لوحة تحكم الأدمن ==============================
-
+# ================= لوحة تحكم الأدمن =================
 @bot.callback_query_handler(func=lambda call: call.data == "admin_panel")
 @force_sub_required
 def admin_panel_callback(call):
@@ -1121,24 +1065,24 @@ def admin_panel_callback(call):
     conn.close()
     
     if not is_admin and user_id != ADMIN_ID:
-        bot.answer_callback_query(call.id, "❌ ليس لديك صلاحية الوصول!", show_alert=True)
+        bot.answer_callback_query(call.id, "❌ ليس لديك صلاحية!", show_alert=True)
         return
     
     text = "👑 <b>لوحة التحكم الإدارية</b>\n\nاختر الإدارة التي تريدها:"
     keyboard = types.InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        types.InlineKeyboardButton("📊 إحصائيات", callback_data="admin_stats", style='success'),
-        types.InlineKeyboardButton("👥 المستخدمين", callback_data="admin_users", style='primary')
+        types.InlineKeyboardButton("📊 إحصائيات", callback_data="admin_stats"),
+        types.InlineKeyboardButton("👥 المستخدمين", callback_data="admin_users")
     )
     keyboard.add(
-        types.InlineKeyboardButton("➕ إضافة أدمن", callback_data="add_admin", style='primary'),
-        types.InlineKeyboardButton("🗑 حذف أدمن", callback_data="remove_admin", style='success')
+        types.InlineKeyboardButton("➕ إضافة أدمن", callback_data="add_admin"),
+        types.InlineKeyboardButton("🗑 حذف أدمن", callback_data="remove_admin")
     )
     keyboard.add(
-        types.InlineKeyboardButton("📢 قنوات اشتراك", callback_data="admin_force_subs", style='danger'),
-        types.InlineKeyboardButton("📣 قنوات التواصل", callback_data="channels", style='success')
+        types.InlineKeyboardButton("📢 قنوات اشتراك", callback_data="admin_force_subs"),
+        types.InlineKeyboardButton("📣 قنوات التواصل", callback_data="channels")
     )
-    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="main_menu", style='danger'))
+    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="main_menu"))
     
     try:
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
@@ -1160,10 +1104,10 @@ def admin_stats_callback(call):
 🎯 المسابقات: {contests_count}
 🏆 المتسابقين: {contestants_count}
 👍 التصويتات: {votes_count}
-⏰ الحذف التلقائي: مفعل (24 ساعة)"""
+⏰ الحذف التلقائي: مفعل"""
     
     keyboard = types.InlineKeyboardMarkup()
-    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="admin_panel", style='danger'))
+    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="admin_panel"))
     
     try:
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
@@ -1185,7 +1129,7 @@ def admin_users_callback(call):
             text += f"• {username}\n"
     
     keyboard = types.InlineKeyboardMarkup()
-    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="admin_panel", style='danger'))
+    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="admin_panel"))
     
     try:
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
@@ -1200,23 +1144,11 @@ def add_admin_callback(call):
 def process_add_admin(message):
     try:
         user_id = int(message.text.strip())
-        
-        try:
-            user = bot.get_chat(user_id)
-            username = user.username
-        except:
-            username = None
-        
         conn = get_db()
         conn.execute("INSERT OR IGNORE INTO admins (user_id) VALUES (?)", (user_id,))
         conn.commit()
         conn.close()
-        
-        if username:
-            bot.send_message(message.chat.id, f"✅ تم إضافة `@{username}` كأدمن", parse_mode="Markdown")
-        else:
-            bot.send_message(message.chat.id, f"✅ تم إضافة العضو `{user_id}` كأدمن", parse_mode="Markdown")
-        
+        bot.send_message(message.chat.id, f"✅ تم إضافة العضو {user_id} كأدمن")
         send_main_menu(message.chat.id, message.from_user.id)
     except:
         bot.send_message(message.chat.id, "❌ ID غير صحيح")
@@ -1238,25 +1170,22 @@ def process_remove_admin(message):
         conn.execute("DELETE FROM admins WHERE user_id = ?", (user_id,))
         conn.commit()
         conn.close()
-        
-        bot.send_message(message.chat.id, f"✅ تم حذف العضو `{user_id}` من الأدمن", parse_mode="Markdown")
+        bot.send_message(message.chat.id, f"✅ تم حذف العضو {user_id} من الأدمن")
         send_main_menu(message.chat.id, message.from_user.id)
     except:
         bot.send_message(message.chat.id, "❌ ID غير صحيح")
 
 @bot.callback_query_handler(func=lambda call: call.data == "admin_force_subs")
 def admin_force_subs_callback(call):
-    text = """📢 <b>إدارة قنوات الاشتراك الإجباري</b>
-
-يمكنك إضافة قنوات يجب على المستخدمين الاشتراك فيها قبل استخدام البوت."""
+    text = "📢 <b>إدارة قنوات الاشتراك الإجباري</b>\n\nيمكنك إضافة قنوات يجب الاشتراك فيها قبل استخدام البوت."
     
     keyboard = types.InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        types.InlineKeyboardButton("➕ إضافة قناة", callback_data="add_force_sub", style='danger'),
-        types.InlineKeyboardButton("🗑 حذف قناة", callback_data="remove_force_sub", style='success'),
-        types.InlineKeyboardButton("📋 عرض القنوات", callback_data="list_force_subs", style='primary')
+        types.InlineKeyboardButton("➕ إضافة قناة", callback_data="add_force_sub"),
+        types.InlineKeyboardButton("🗑 حذف قناة", callback_data="remove_force_sub"),
+        types.InlineKeyboardButton("📋 عرض القنوات", callback_data="list_force_subs")
     )
-    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="admin_panel", style='danger'))
+    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="admin_panel"))
     
     try:
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
@@ -1276,7 +1205,6 @@ def process_add_force_sub(message):
     try:
         chat = bot.get_chat(channel_input)
         
-        # التحقق من أن البوت مشرف
         bot_member = bot.get_chat_member(chat.id, bot.get_me().id)
         if bot_member.status != "administrator":
             bot.send_message(message.chat.id, "❌ البوت ليس مشرفاً في هذه القناة!")
@@ -1288,7 +1216,7 @@ def process_add_force_sub(message):
         conn.commit()
         conn.close()
         
-        bot.send_message(message.chat.id, f"✅ تم إضافة القناة @{chat.username} إلى الاشتراك الإجباري")
+        bot.send_message(message.chat.id, f"✅ تم إضافة القناة @{chat.username}")
         send_main_menu(message.chat.id, message.from_user.id)
     except Exception as e:
         bot.send_message(message.chat.id, f"❌ خطأ: {str(e)}")
@@ -1300,7 +1228,7 @@ def remove_force_sub_callback(call):
     conn.close()
     
     if not channels:
-        bot.answer_callback_query(call.id, "لا توجد قنوات مسجلة!", show_alert=True)
+        bot.answer_callback_query(call.id, "لا توجد قنوات!", show_alert=True)
         return
     
     text = "🗑 <b>اختر القناة لحذفها:</b>\n\n"
@@ -1309,7 +1237,7 @@ def remove_force_sub_callback(call):
     for ch in channels:
         keyboard.add(types.InlineKeyboardButton(f"📢 @{ch['channel_username']}", callback_data=f"remove_channel_{ch['id']}"))
     
-    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="admin_force_subs", style='danger'))
+    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="admin_force_subs"))
     
     try:
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
@@ -1325,7 +1253,7 @@ def remove_channel_callback(call):
     conn.commit()
     conn.close()
     
-    bot.answer_callback_query(call.id, "✅ تم حذف القناة من الاشتراك الإجباري", show_alert=True)
+    bot.answer_callback_query(call.id, "✅ تم الحذف", show_alert=True)
     admin_force_subs_callback(call)
 
 @bot.callback_query_handler(func=lambda call: call.data == "list_force_subs")
@@ -1335,22 +1263,21 @@ def list_force_subs_callback(call):
     conn.close()
     
     if not channels:
-        text = "📋 لا توجد قنوات اشتراك إجباري"
+        text = "📋 لا توجد قنوات"
     else:
         text = "📋 <b>قنوات الاشتراك الإجباري</b>\n\n"
         for ch in channels:
             text += f"• @{ch['channel_username']}\n"
     
     keyboard = types.InlineKeyboardMarkup()
-    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="admin_force_subs", style='danger'))
+    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="admin_force_subs"))
     
     try:
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
     except:
         bot.send_message(call.message.chat.id, text, reply_markup=keyboard)
 
-# ============================== تشغيل البوت ==============================
-
+# ================= تشغيل البوت =================
 if __name__ == "__main__":
     print("🚀 تشغيل بوت المسابقات...")
     print("✅ أزرار ملونة")
@@ -1358,18 +1285,14 @@ if __name__ == "__main__":
     print("✅ عداد تنازلي")
     print("✅ جدول متصدرين")
     print("✅ ايموجيات مميزة")
-    print("✅ حذف تلقائي")
-    print("✅ إدارة أدمن كاملة")
-    print("✅ قنوات اشتراك إجباري")
     
-    # إضافة الأدمن الأساسي
     conn = get_db()
     conn.execute("INSERT OR IGNORE INTO admins (user_id) VALUES (?)", (ADMIN_ID,))
     conn.commit()
     conn.close()
     
-    # 🔥 هذا السطر مهم جداً لحل مشكلة خطأ 409 🔥
-    print("🔄 جارٍ حذف أي Webhook سابق...")
+    # حذف أي webhook موجود
+    print("🔄 جاري حذف أي Webhook سابق...")
     bot.delete_webhook()
     time.sleep(2)
     

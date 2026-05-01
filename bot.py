@@ -156,7 +156,7 @@ def force_sub_required(func):
             keyboard = types.InlineKeyboardMarkup(row_width=1)
             for ch in channels:
                 keyboard.add(types.InlineKeyboardButton(f"📢 اشترك في القناة", url=f"https://t.me/{ch[1]}"))
-            keyboard.add(types.InlineKeyboardButton("🔄 تحقق", callback_data="check_sub"))
+            keyboard.add(types.InlineKeyboardButton("🔄 تحقق", callback_data="check_sub", style='primary'))
             
             msg = "❌ يجب الاشتراك في القنوات التالية أولاً:\n\n"
             for ch in channels:
@@ -179,24 +179,24 @@ def main_keyboard(user_id):
     keyboard = types.InlineKeyboardMarkup(row_width=2)
     
     keyboard.add(
-        types.InlineKeyboardButton("🎯 إنشاء مسابقة", callback_data="create_contest"),
-        types.InlineKeyboardButton("📢 قناة التصويت", callback_data="set_channel")
+        types.InlineKeyboardButton("🎯 إنشاء مسابقة", callback_data="create_contest", style='primary'),
+        types.InlineKeyboardButton("📢 قناة التصويت", callback_data="set_channel", style='primary')
     )
     keyboard.add(
-        types.InlineKeyboardButton("🏆 مسابقاتي", callback_data="my_contests"),
-        types.InlineKeyboardButton("⚙️ الإعدادات", callback_data="settings")
+        types.InlineKeyboardButton("🏆 مسابقاتي", callback_data="my_contests", style='success'),
+        types.InlineKeyboardButton("⚙️ الإعدادات", callback_data="settings", style='success')
     )
     keyboard.add(
-        types.InlineKeyboardButton("➕ إضافة أصوات", callback_data="add_votes"),
-        types.InlineKeyboardButton("➖ خصم أصوات", callback_data="remove_votes")
+        types.InlineKeyboardButton("➕ إضافة أصوات", callback_data="add_votes", style='primary'),
+        types.InlineKeyboardButton("➖ خصم أصوات", callback_data="remove_votes", style='success')
     )
     keyboard.add(
-        types.InlineKeyboardButton("📊 جدول المتصدرين", callback_data="leaderboard"),
-        types.InlineKeyboardButton("📖 المساعدة", callback_data="help")
+        types.InlineKeyboardButton("📊 جدول المتصدرين", callback_data="leaderboard", style='primary'),
+        types.InlineKeyboardButton("📖 المساعدة", callback_data="help", style='success')
     )
     keyboard.add(
-        types.InlineKeyboardButton("⭐ المميزات", callback_data="features"),
-        types.InlineKeyboardButton("📣 قنوات التواصل", callback_data="channels")
+        types.InlineKeyboardButton("⭐ المميزات", callback_data="features", style='success'),
+        types.InlineKeyboardButton("📣 قنوات التواصل", callback_data="channels", style='success')
     )
     
     conn = get_db()
@@ -204,7 +204,7 @@ def main_keyboard(user_id):
     conn.close()
     
     if is_admin or str(user_id) == str(ADMIN_ID):
-        keyboard.add(types.InlineKeyboardButton("👑 لوحة التحكم", callback_data="admin_panel"))
+        keyboard.add(types.InlineKeyboardButton("👑 لوحة التحكم", callback_data="admin_panel", style='danger'))
     
     return keyboard
 
@@ -264,7 +264,7 @@ def start_cmd(message):
                     message.chat.id,
                     "🎯 <b>المشاركة في المسابقة</b>\n\nأرسل اسمك الآن للمشاركة:",
                     reply_markup=types.InlineKeyboardMarkup().add(
-                        types.InlineKeyboardButton("❌ إلغاء", callback_data="cancel")
+                        types.InlineKeyboardButton("❌ إلغاء", callback_data="cancel", style='danger')
                     )
                 )
                 return
@@ -305,7 +305,7 @@ def channels_callback(call):
 تابعنا ليصلك كل جديد!"""
     
     keyboard = types.InlineKeyboardMarkup()
-    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="main_menu"))
+    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="main_menu", style='danger'))
     
     try:
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
@@ -416,8 +416,8 @@ def get_contest_desc(message):
 👇 اضغط للمشاركة:"""
         
         keyboard = types.InlineKeyboardMarkup()
-        keyboard.add(types.InlineKeyboardButton("🎯 المشاركة في المسابقة", url=contest_link))
-        keyboard.add(types.InlineKeyboardButton("📤 مشاركة", url=contest_link))
+        keyboard.add(types.InlineKeyboardButton("🎯 المشاركة في المسابقة", url=contest_link, style='success'))
+        keyboard.add(types.InlineKeyboardButton("📤 مشاركة", url=contest_link, style='primary'))
         
         sent = bot.send_message(int(channel_id), post_text, reply_markup=keyboard)
         
@@ -507,8 +507,8 @@ def my_contests_callback(call):
             call.message.chat.id,
             call.message.message_id,
             reply_markup=types.InlineKeyboardMarkup().add(
-                types.InlineKeyboardButton("🎯 إنشاء مسابقة", callback_data="create_contest"),
-                types.InlineKeyboardButton("↩️ رجوع", callback_data="main_menu")
+                types.InlineKeyboardButton("🎯 إنشاء مسابقة", callback_data="create_contest", style='primary'),
+                types.InlineKeyboardButton("↩️ رجوع", callback_data="main_menu", style='danger')
             )
         )
         return
@@ -527,15 +527,15 @@ def my_contests_callback(call):
     # أزرار التنقل بين الصفحات
     nav_buttons = []
     if page > 1:
-        nav_buttons.append(types.InlineKeyboardButton("⬅️ السابق", callback_data=f"contests_page_{page-1}"))
+        nav_buttons.append(types.InlineKeyboardButton("⬅️ السابق", callback_data=f"contests_page_{page-1}", style='success'))
     if page < total_pages:
-        nav_buttons.append(types.InlineKeyboardButton("التالي ➡️", callback_data=f"contests_page_{page+1}"))
+        nav_buttons.append(types.InlineKeyboardButton("التالي ➡️", callback_data=f"contests_page_{page+1}", style='success'))
     
     if nav_buttons:
         keyboard.row(*nav_buttons)
     
-    keyboard.add(types.InlineKeyboardButton("➕ مسابقة جديدة", callback_data="create_contest"))
-    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="main_menu"))
+    keyboard.add(types.InlineKeyboardButton("➕ مسابقة جديدة", callback_data="create_contest", style='success'))
+    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="main_menu", style='danger'))
     
     try:
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
@@ -570,7 +570,7 @@ def leaderboard_callback(call):
     for contest in contests:
         keyboard.add(types.InlineKeyboardButton(f"🎯 {contest['title']}", callback_data=f"show_leaderboard_{contest['id']}"))
     
-    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="main_menu"))
+    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="main_menu", style='danger'))
     
     try:
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
@@ -606,8 +606,8 @@ def show_leaderboard(call):
     
     keyboard = types.InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        types.InlineKeyboardButton("🔄 تحديث", callback_data=f"refresh_leaderboard_{contest_id}"),
-        types.InlineKeyboardButton("↩️ رجوع", callback_data="leaderboard")
+        types.InlineKeyboardButton("🔄 تحديث", callback_data=f"refresh_leaderboard_{contest_id}", style='success'),
+        types.InlineKeyboardButton("↩️ رجوع", callback_data="leaderboard", style='danger')
     )
     
     try:
@@ -644,8 +644,8 @@ def refresh_leaderboard(call):
     
     keyboard = types.InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        types.InlineKeyboardButton("🔄 تحديث", callback_data=f"refresh_leaderboard_{contest_id}"),
-        types.InlineKeyboardButton("↩️ رجوع", callback_data="leaderboard")
+        types.InlineKeyboardButton("🔄 تحديث", callback_data=f"refresh_leaderboard_{contest_id}", style='success'),
+        types.InlineKeyboardButton("↩️ رجوع", callback_data="leaderboard", style='danger')
     )
     
     bot.answer_callback_query(call.id, "✅ تم تحديث جدول المتصدرين")
@@ -719,7 +719,7 @@ def handle_join_contest(message):
         keyboard = types.InlineKeyboardMarkup(row_width=1)
         keyboard.add(
             types.InlineKeyboardButton(f"👍 تصويت (0)", callback_data=f"vote_{contest_id}_{contestant_id}"),
-            types.InlineKeyboardButton("🎯 المشاركة", url=contest_link)
+            types.InlineKeyboardButton("🎯 المشاركة", url=contest_link, style='success')
         )
         
         sent = bot.send_message(int(contest['channel_id']), post_text, reply_markup=keyboard)
@@ -799,7 +799,7 @@ def vote_callback(call):
             keyboard = types.InlineKeyboardMarkup(row_width=1)
             keyboard.add(
                 types.InlineKeyboardButton(f"👍 تصويت ({info['votes']})", callback_data=f"vote_{contest_id}_{contestant_id}"),
-                types.InlineKeyboardButton("🎯 المشاركة", url=f"https://t.me/{bot.get_me().username}?start=contest_{contest_id}")
+                types.InlineKeyboardButton("🎯 المشاركة", url=f"https://t.me/{bot.get_me(, style='success').username}?start=contest_{contest_id}")
             )
             bot.edit_message_reply_markup(int(info["channel_id"]), info["post_id"], reply_markup=keyboard)
         except:
@@ -894,7 +894,7 @@ def process_votes_amount(message):
                 keyboard = types.InlineKeyboardMarkup(row_width=1)
                 keyboard.add(
                     types.InlineKeyboardButton(f"👍 تصويت ({info['votes']})", callback_data=f"vote_{info['contest_id']}_{contestant_id}"),
-                    types.InlineKeyboardButton("🎯 المشاركة", url=f"https://t.me/{bot.get_me().username}?start=contest_{info['contest_id']}")
+                    types.InlineKeyboardButton("🎯 المشاركة", url=f"https://t.me/{bot.get_me(, style='success').username}?start=contest_{info['contest_id']}")
                 )
                 bot.edit_message_reply_markup(int(info["channel_id"]), info["post_id"], reply_markup=keyboard)
             except:
@@ -925,14 +925,14 @@ def settings_callback(call):
     
     keyboard = types.InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        types.InlineKeyboardButton("📢 تغيير القناة", callback_data="set_channel"),
-        types.InlineKeyboardButton("⛔ حظر عضو", callback_data="ban_user")
+        types.InlineKeyboardButton("📢 تغيير القناة", callback_data="set_channel", style='primary'),
+        types.InlineKeyboardButton("⛔ حظر عضو", callback_data="ban_user", style='danger')
     )
     keyboard.add(
-        types.InlineKeyboardButton("✅ فك حظر", callback_data="unban_user"),
-        types.InlineKeyboardButton("📋 المحظورين", callback_data="banned_list")
+        types.InlineKeyboardButton("✅ فك حظر", callback_data="unban_user", style='success'),
+        types.InlineKeyboardButton("📋 المحظورين", callback_data="banned_list", style='danger')
     )
-    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="main_menu"))
+    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="main_menu", style='danger'))
     
     try:
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
@@ -990,7 +990,7 @@ def banned_list_callback(call):
             text += f"🆔 `{b['user_id']}`\n⚖️ {b['reason']}\n\n"
     
     keyboard = types.InlineKeyboardMarkup()
-    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="settings"))
+    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="settings", style='danger'))
     
     try:
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard, parse_mode="Markdown")
@@ -1028,7 +1028,7 @@ def help_callback(call):
 👨‍💻 <b>مطور البوت:</b> عصوم الشامي"""
     
     keyboard = types.InlineKeyboardMarkup()
-    keyboard.add(types.InlineKeyboardButton("🔙 رجوع", callback_data="main_menu"))
+    keyboard.add(types.InlineKeyboardButton("🔙 رجوع", callback_data="main_menu", style='danger'))
     
     try:
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
@@ -1055,7 +1055,7 @@ def features_callback(call):
 🔥 <b>تم التطوير بواسطة:</b> عصوم الشامي"""
     
     keyboard = types.InlineKeyboardMarkup()
-    keyboard.add(types.InlineKeyboardButton("🔙 رجوع", callback_data="main_menu"))
+    keyboard.add(types.InlineKeyboardButton("🔙 رجوع", callback_data="main_menu", style='danger'))
     
     try:
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
@@ -1127,18 +1127,18 @@ def admin_panel_callback(call):
     text = "👑 <b>لوحة التحكم الإدارية</b>\n\nاختر الإدارة التي تريدها:"
     keyboard = types.InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        types.InlineKeyboardButton("📊 إحصائيات", callback_data="admin_stats"),
-        types.InlineKeyboardButton("👥 المستخدمين", callback_data="admin_users")
+        types.InlineKeyboardButton("📊 إحصائيات", callback_data="admin_stats", style='success'),
+        types.InlineKeyboardButton("👥 المستخدمين", callback_data="admin_users", style='primary')
     )
     keyboard.add(
-        types.InlineKeyboardButton("➕ إضافة أدمن", callback_data="add_admin"),
-        types.InlineKeyboardButton("🗑 حذف أدمن", callback_data="remove_admin")
+        types.InlineKeyboardButton("➕ إضافة أدمن", callback_data="add_admin", style='primary'),
+        types.InlineKeyboardButton("🗑 حذف أدمن", callback_data="remove_admin", style='success')
     )
     keyboard.add(
-        types.InlineKeyboardButton("📢 قنوات اشتراك", callback_data="admin_force_subs"),
-        types.InlineKeyboardButton("📣 قنوات التواصل", callback_data="channels")
+        types.InlineKeyboardButton("📢 قنوات اشتراك", callback_data="admin_force_subs", style='danger'),
+        types.InlineKeyboardButton("📣 قنوات التواصل", callback_data="channels", style='success')
     )
-    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="main_menu"))
+    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="main_menu", style='danger'))
     
     try:
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
@@ -1163,7 +1163,7 @@ def admin_stats_callback(call):
 ⏰ الحذف التلقائي: مفعل (24 ساعة)"""
     
     keyboard = types.InlineKeyboardMarkup()
-    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="admin_panel"))
+    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="admin_panel", style='danger'))
     
     try:
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
@@ -1185,7 +1185,7 @@ def admin_users_callback(call):
             text += f"• {username}\n"
     
     keyboard = types.InlineKeyboardMarkup()
-    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="admin_panel"))
+    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="admin_panel", style='danger'))
     
     try:
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
@@ -1252,11 +1252,11 @@ def admin_force_subs_callback(call):
     
     keyboard = types.InlineKeyboardMarkup(row_width=2)
     keyboard.add(
-        types.InlineKeyboardButton("➕ إضافة قناة", callback_data="add_force_sub"),
-        types.InlineKeyboardButton("🗑 حذف قناة", callback_data="remove_force_sub"),
-        types.InlineKeyboardButton("📋 عرض القنوات", callback_data="list_force_subs")
+        types.InlineKeyboardButton("➕ إضافة قناة", callback_data="add_force_sub", style='danger'),
+        types.InlineKeyboardButton("🗑 حذف قناة", callback_data="remove_force_sub", style='success'),
+        types.InlineKeyboardButton("📋 عرض القنوات", callback_data="list_force_subs", style='primary')
     )
-    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="admin_panel"))
+    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="admin_panel", style='danger'))
     
     try:
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
@@ -1309,7 +1309,7 @@ def remove_force_sub_callback(call):
     for ch in channels:
         keyboard.add(types.InlineKeyboardButton(f"📢 @{ch['channel_username']}", callback_data=f"remove_channel_{ch['id']}"))
     
-    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="admin_force_subs"))
+    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="admin_force_subs", style='danger'))
     
     try:
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
@@ -1342,7 +1342,7 @@ def list_force_subs_callback(call):
             text += f"• @{ch['channel_username']}\n"
     
     keyboard = types.InlineKeyboardMarkup()
-    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="admin_force_subs"))
+    keyboard.add(types.InlineKeyboardButton("↩️ رجوع", callback_data="admin_force_subs", style='danger'))
     
     try:
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=keyboard)
